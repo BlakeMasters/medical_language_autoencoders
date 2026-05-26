@@ -4,3 +4,10 @@ __pycache__/
 .pytest_cache/
 build/
 dist/
+
+# Local MedNLA / evaluation run outputs (not versioned)
+runs/
+
+# Coding-agent workflow, work orders, and course context (local only)
+context/
+.cursor/
