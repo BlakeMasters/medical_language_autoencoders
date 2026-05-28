@@ -124,6 +124,23 @@ Use `scp` or `rsync` only after this direct SSH check succeeds.
 5. Sync `runs/` back locally.
 6. Destroy the instance and verify no unwanted rentals remain.
 
+`scripts/mednla/run_eval_pipeline.py` can orchestrate project commands after
+the SSH-gated instance is ready and dependencies are installed. It is not a
+cloud launcher and does not start SGLang; start the SGLang actor separately,
+then include `check_sglang,decode` stages in the runner.
+
+```bash
+python scripts/mednla/run_eval_pipeline.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --run-dir runs/mednla/pilot_qwen7b_medqa \
+  --stages check_sglang,decode,score_heuristic,analysis,validate \
+  --sglang-url http://127.0.0.1:18000 \
+  --no-critic \
+  --quick-analysis \
+  --resume
+```
+
 ## Current Project Commands
 
 Run these first on any new Vast instance:
