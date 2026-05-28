@@ -20,7 +20,27 @@ git check-ignore -v .env env/
 
 ## Rent a Test Instance
 
-Use the Qwen7B pilot profile from [vast_cli_reference.md](vast_cli_reference.md):
+For T4 decode, prefer the Vast SGLang Inference Engine template. Configure it
+with:
+
+```bash
+SGLANG_MODEL=kitft/nla-qwen2.5-7b-L20-av
+AUTO_PARALLEL=false
+APT_PACKAGES=git rsync tmux htop
+PIP_PACKAGES=pytest
+SGLANG_ARGS=--trust-remote-code --disable-radix-cache --mem-fraction-static 0.75
+```
+
+If using an RTX 4090 host and SGLang reports CUDA graph or JIT failures, append
+these flags to `SGLANG_ARGS` and restart the service:
+
+```bash
+--disable-cuda-graph --disable-piecewise-cuda-graph --disable-overlap-schedule
+```
+
+Use the Qwen7B pilot profile from [vast_cli_reference.md](vast_cli_reference.md)
+when renting the GPU. If not using the SGLang template, replace the image with a
+CUDA devel or SGLang-ready image instead of the PyTorch runtime image:
 
 ```bash
 vastai search offers \
@@ -72,6 +92,20 @@ Expected result:
 - MedNLA tests pass.
 - `items.jsonl` has 10 rows for the pinned MedQA pilot config.
 - Each row records the pinned Hugging Face revision in `source_metadata`.
+
+## SGLang Template Readiness
+
+On the SGLang template, verify the managed service is up before T4:
+
+```bash
+curl -sf http://127.0.0.1:18000/v1/models
+curl -sf http://127.0.0.1:18000/model_info
+```
+
+The project T4 client calls native SGLang `/generate` with `input_embeds`, not
+the OpenAI-compatible chat endpoint. If using the template service, set the
+remote config `nla_decode.sglang_url` to `http://127.0.0.1:18000`, or run a
+separate SGLang process on port `30000`.
 
 ## Optional NLA Inference Smoke
 

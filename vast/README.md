@@ -41,6 +41,35 @@ Default for the current MedNLA pilot:
 Use A100/H100-class instances only for larger datagen/training configs or if
 the eval runner grows beyond the Qwen7B pilot footprint.
 
+## SGLang Template Settings
+
+Prefer the Vast SGLang Inference Engine template over a plain PyTorch runtime
+image for T4 decode. The PyTorch runtime image can run T3, but it does not ship
+the SGLang/CUDA toolchain in a compatible state for FlashInfer runtime kernels.
+
+Use these template environment variables for the Qwen7B actor smoke:
+
+```bash
+SGLANG_MODEL=kitft/nla-qwen2.5-7b-L20-av
+AUTO_PARALLEL=false
+APT_PACKAGES=git rsync tmux htop
+PIP_PACKAGES=pytest
+SGLANG_ARGS=--trust-remote-code --disable-radix-cache --mem-fraction-static 0.75
+```
+
+For RTX 4090 hosts, prefer a CUDA 12.x SGLang image unless the host driver
+clearly supports the selected CUDA major version. If SGLang startup hits CUDA
+graph or JIT issues, append these flags to `SGLANG_ARGS`:
+
+```bash
+--disable-cuda-graph --disable-piecewise-cuda-graph --disable-overlap-schedule
+```
+
+The template serves SGLang on internal port `18000`. T4 currently defaults to
+`http://localhost:30000`, so either point `nla_decode.sglang_url` at
+`http://127.0.0.1:18000` on the remote config or launch a separate local SGLang
+server on port `30000`.
+
 ## Standard Flow
 
 1. Search and create an instance with [vast_cli_reference.md](vast_cli_reference.md).
