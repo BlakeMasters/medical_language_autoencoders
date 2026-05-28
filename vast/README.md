@@ -44,9 +44,9 @@ the eval runner grows beyond the Qwen7B pilot footprint.
 ## Runtime Profiles
 
 Use a plain CUDA/PyTorch runtime for T3 base probes and the Vast SGLang
-Inference Engine template for T4 decode. Keep them separate unless a specific
-image has already been proven to support both paths; installing `sglang[all]`
-into the T3 environment can replace the torch/transformers stack.
+Inference Engine image for T4 decode. Keep them separate unless a specific image
+has already been proven to support both paths; installing `sglang[all]` into the
+T3 environment can replace the torch/transformers stack.
 
 For T3 on a PyTorch runtime:
 
@@ -55,20 +55,27 @@ cd /workspace/medical_language_autoencoders
 python -m pip install -r requirements/mednla-vast-t3.txt
 ```
 
-For T4 inside the SGLang template:
+For T4 inside a SGLang-ready image:
 
 ```bash
 cd /workspace/medical_language_autoencoders
 python -m pip install -r requirements/mednla-vast-t4-sglang.txt
 ```
 
+For a deliberate future T5 MedGemma judge run, use
+`requirements/mednla-vast-t5.txt` in a separate process after accepting the
+MedGemma Hugging Face terms. The immediate budget smoke validates live T4 decode
+plus deterministic `heuristic_v1` scoring, not the live MedGemma judge.
+
 ## SGLang Template Settings
 
-Prefer the Vast SGLang Inference Engine template over a plain PyTorch runtime
-image for T4 decode. The PyTorch runtime image can run T3, but it does not ship
-the SGLang/CUDA toolchain in a compatible state for FlashInfer runtime kernels.
+Prefer a two-phase SGLang launch for smoke tests: rent an SSH-ready SGLang image
+first, then start the NLA actor server manually after repo sync. Avoid making
+model download/server startup part of the Vast boot path; if it stalls, the
+instance can remain in `loading` without reachable SSH.
 
-Use these template environment variables for the Qwen7B actor smoke:
+If using the managed SGLang template anyway, use these environment variables for
+the Qwen7B actor smoke:
 
 ```bash
 SGLANG_MODEL=kitft/nla-qwen2.5-7b-L20-av
@@ -91,6 +98,22 @@ The template serves SGLang on internal port `18000`. T4 currently defaults to
 the template. If the template requires a bearer token, pass it through an
 environment variable with `--auth-token-env`; do not write tokens into YAML,
 tracked docs, or logs.
+
+## SSH Gate
+
+Every Vast rental must pass an actual SSH test before any file sync or setup.
+Poll at 15-second intervals and destroy the instance if SSH is not reachable
+within 120 seconds of creation. Treat `loading` plus unreachable SSH as a boot
+failure, not as a reason to wait indefinitely.
+
+```bash
+ssh -o StrictHostKeyChecking=no \
+  -o UserKnownHostsFile=/dev/null \
+  -o ConnectTimeout=10 \
+  root@HOST -p PORT 'echo ssh_ready && nvidia-smi'
+```
+
+Use `scp` or `rsync` only after this direct SSH check succeeds.
 
 ## Standard Flow
 
@@ -135,6 +158,20 @@ python scripts/mednla/run_nla_decode.py \
   --manifest-out runs/mednla/pilot_qwen7b_medqa/decode_manifest.json
 ```
 
+For the minimal T5 smoke, score the returned decodes with the deterministic
+scorer:
+
+```bash
+python scripts/mednla/score_explanations.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --items runs/mednla/pilot_qwen7b_medqa/items.jsonl \
+  --predictions runs/mednla/pilot_qwen7b_medqa/predictions.jsonl \
+  --decodes runs/mednla/pilot_qwen7b_medqa/decodes.jsonl \
+  --out runs/mednla/pilot_qwen7b_medqa/scores_heuristic.jsonl \
+  --scorer heuristic_v1 \
+  --manifest-out runs/mednla/pilot_qwen7b_medqa/score_manifest.json
+```
+
 When a full MedNLA eval runner is added, keep the same contract: checked-in
 config under `configs/mednla/`, outputs under `runs/mednla/<run_id>/`, and a
 small smoke command before scaling up.
@@ -146,6 +183,7 @@ small smoke command before scaling up.
 - Keep long remote commands inside `tmux`.
 - Prefer `rsync`/`scp` after SSH is known; use `vastai copy` only when it is
   simpler.
+- Destroy any instance that does not pass direct SSH within 120 seconds.
 - For failed `loading`, `unknown`, `offline`, or `exited` instances, destroy and
   retry with another offer.
 - For CUDA OOM, reduce batch size or model scope before renting a larger class.

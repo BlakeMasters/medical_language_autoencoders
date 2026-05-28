@@ -59,8 +59,15 @@ Save the returned `new_contract` as `INSTANCE_ID`.
 vastai show instance INSTANCE_ID
 vastai show instances
 vastai ssh-url INSTANCE_ID
-ssh root@HOST -p PORT
+ssh -o StrictHostKeyChecking=no \
+  -o UserKnownHostsFile=/dev/null \
+  -o ConnectTimeout=10 \
+  root@HOST -p PORT 'echo ssh_ready && nvidia-smi'
 ```
+
+Poll every 15 seconds after creation. If direct SSH is not reachable within 120
+seconds, destroy the instance and try another offer. Do not sync files, install
+packages, or wait on a `loading` instance past this gate.
 
 Remote smoke checks:
 
@@ -78,7 +85,7 @@ Instance state policy:
 
 | State | Action |
 | --- | --- |
-| `loading` | Poll again in 10-30 seconds. |
+| `loading` | Poll every 15 seconds; destroy if SSH is unreachable at 120 seconds. |
 | `running` | SSH and run smoke checks. |
 | `exited` | Destroy and retry with another offer. |
 | `unknown` | Destroy unless it recovers quickly. |
@@ -87,7 +94,8 @@ Instance state policy:
 ## Sync Project Files
 
 For a pushed branch, clone directly on the remote. For local/unpushed work,
-sync the current workspace without secrets or run artifacts:
+sync the current workspace without secrets or run artifacts. Use `rsync` or
+`scp` only after the direct SSH gate succeeds:
 
 ```bash
 rsync -az --delete \
