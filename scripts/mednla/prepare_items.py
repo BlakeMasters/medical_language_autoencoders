@@ -17,6 +17,7 @@ from nla.mednla.schema import to_dict
 
 logger = logging.getLogger("nla.mednla.prepare_items")
 
+
 def _write_items_jsonl(items: list, output_path: Path) -> None:
     tmp_path = output_path.with_suffix(output_path.suffix + ".tmp")
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -25,6 +26,7 @@ def _write_items_jsonl(items: list, output_path: Path) -> None:
             line = orjson.dumps(to_dict(item)) + b"\n"
             handle.write(line)
     os.replace(tmp_path, output_path)
+
 
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
@@ -61,6 +63,9 @@ def main() -> int:
     except ValueError as exc:
         logger.error("validation error: %s", exc)
         return 3
+    except Exception as exc:
+        logger.error("failed to load datasets: %s", exc)
+        return 4
 
     try:
         _write_items_jsonl(items, output_path)

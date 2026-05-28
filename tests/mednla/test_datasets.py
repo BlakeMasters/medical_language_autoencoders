@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import re
+from pathlib import Path
 from typing import Any
 
 import orjson
 import pytest
+import yaml
 from datasets import Dataset
 
 from nla.mednla.datasets import load_items
@@ -163,3 +165,12 @@ def test_stratified_sampling_when_subject_coverage_is_high(monkeypatch: pytest.M
     items = load_items(_base_cfg(sample_size=4), seed=99)
     subjects = {item.subject for item in items}
     assert len(subjects) >= 2
+
+
+def test_pilot_config_uses_pinned_hf_revision() -> None:
+    cfg_path = Path("configs/mednla/pilot_qwen7b_medqa.yaml")
+    cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    for dataset_entry in cfg["datasets"]:
+        revision = dataset_entry["revision"]
+        assert revision != "main"
+        assert re.fullmatch(r"[0-9a-f]{40}", revision)

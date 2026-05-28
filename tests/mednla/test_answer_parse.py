@@ -19,6 +19,9 @@ ASPIRIN_CHOICES = {"A": "Aspirin", "B": "Ibuprofen"}
         (" A ", "A"),
         ("Answer: A", "A"),
         ("Final answer: (B)", "B"),
+        ("Answer is C", "C"),
+        ("I choose option D because it fits best.", "D"),
+        ("The best answer is D because A is contraindicated.", "D"),
         ("the answer is C", "C"),
         ("", None),
         ("A or B", None),
@@ -38,3 +41,18 @@ def test_parse_answer_choice_text_exact_match() -> None:
         )
         == "A"
     )
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("The answer is A, not Ibuprofen.", "A"),
+        ("A. Not Ibuprofen.", "A"),
+        ("A patient should receive Ibuprofen.", "B"),
+    ],
+)
+def test_explicit_letters_take_precedence_over_choice_text_mentions(
+    text: str,
+    expected: str,
+) -> None:
+    assert parse_answer(text, list(ASPIRIN_CHOICES.keys()), choice_texts=ASPIRIN_CHOICES) == expected
