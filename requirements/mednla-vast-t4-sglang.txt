@@ -1,0 +1,11 @@
+# Vast T4 decode runtime for the managed SGLang template.
+#
+# Install from the repo root inside the SGLang template container:
+#   python -m pip install -r requirements/mednla-vast-t4-sglang.txt
+#
+# Do not add sglang[all] here. The template owns the SGLang/CUDA stack; this
+# file installs only this repo and keeps client-side libraries bounded.
+
+-e .
+pytest
+transformers>=4.46,<5

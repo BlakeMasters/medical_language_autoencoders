@@ -39,8 +39,7 @@ these flags to `SGLANG_ARGS` and restart the service:
 ```
 
 Use the Qwen7B pilot profile from [vast_cli_reference.md](vast_cli_reference.md)
-when renting the GPU. If not using the SGLang template, replace the image with a
-CUDA devel or SGLang-ready image instead of the PyTorch runtime image:
+when renting the GPU. If running only T3, a PyTorch runtime image is acceptable:
 
 ```bash
 vastai search offers \
@@ -61,15 +60,23 @@ Poll until `running`. Destroy and retry if it reaches `exited`, `unknown`, or
 
 ## Remote Bootstrap
 
-After SSH:
+After SSH on a T3 PyTorch runtime:
 
 ```bash
 apt-get update
 apt-get install -y git rsync tmux htop
 cd /workspace/medical_language_autoencoders
 python -m pip install -U pip
-python -m pip install -e .
-python -m pip install "sglang[all]>=0.5.6"
+python -m pip install -r requirements/mednla-vast-t3.txt
+```
+
+After SSH on the T4 SGLang template, leave the managed SGLang stack in place and
+install only this repo's bounded client/test dependencies:
+
+```bash
+cd /workspace/medical_language_autoencoders
+python -m pip install -U pip
+python -m pip install -r requirements/mednla-vast-t4-sglang.txt
 ```
 
 If the workspace was not cloned on the remote, sync it from local first using
@@ -103,38 +110,43 @@ curl -sf http://127.0.0.1:18000/model_info
 ```
 
 The project T4 client calls native SGLang `/generate` with `input_embeds`, not
-the OpenAI-compatible chat endpoint. If using the template service, set the
-remote config `nla_decode.sglang_url` to `http://127.0.0.1:18000`, or run a
-separate SGLang process on port `30000`.
-
-## Optional NLA Inference Smoke
-
-Run this in `tmux` because model download and SGLang startup can take time:
-
-```bash
-tmux new -s mednla
-cd /workspace/medical_language_autoencoders
-python -m sglang.launch_server \
-  --model-path kitft/nla-qwen2.5-7b-L20-av \
-  --port 30000 \
-  --disable-radix-cache \
-  --mem-fraction-static 0.85 \
-  --trust-remote-code \
-  > runs/vast_rehearsal/sglang.log 2>&1
-```
-
-In a second SSH shell:
+the OpenAI-compatible chat endpoint. Use the project readiness check before
+running decode:
 
 ```bash
 cd /workspace/medical_language_autoencoders
-python nla_inference.py kitft/nla-qwen2.5-7b-L20-av \
-  --sglang-url http://localhost:30000 \
-  --n 1 \
-  > runs/vast_rehearsal/nla_inference_smoke.txt
+python scripts/mednla/check_sglang_ready.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --sglang-url http://127.0.0.1:18000
 ```
 
-If this OOMs on a 24 GB card, keep the rehearsal scoped to tests plus
-`prepare_items.py` and rent a larger GPU for full evals.
+If the template requires API auth, read the token from the instance environment
+and pass it without printing the value:
+
+```bash
+python scripts/mednla/check_sglang_ready.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --sglang-url http://127.0.0.1:18000 \
+  --auth-token-env OPEN_BUTTON_TOKEN
+```
+
+## T4 Decode Smoke
+
+Only run decode after readiness succeeds and a T3 run has produced
+`activations.parquet`:
+
+```bash
+python scripts/mednla/run_nla_decode.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --activations runs/mednla/pilot_qwen7b_medqa/activations.parquet \
+  --out runs/mednla/pilot_qwen7b_medqa/decodes.jsonl \
+  --no-critic \
+  --sglang-url http://127.0.0.1:18000 \
+  --manifest-out runs/mednla/pilot_qwen7b_medqa/decode_manifest.json
+```
 
 ## Artifact Return and Teardown
 

@@ -15,6 +15,12 @@ uv pip install "sglang[all]>=0.5.6"
 > which conflicts with `sgl-kernel`'s cu12 wheels. Either pin `torch<2.11` or
 > install with `--index-url https://download.pytorch.org/whl/cu124`.
 
+For Vast MedNLA pilot runs, prefer the bounded runtime files under
+`requirements/`: use `mednla-vast-t3.txt` for base probes on a PyTorch image and
+`mednla-vast-t4-sglang.txt` inside the SGLang template. Do not install
+`sglang[all]` into the T3 environment unless that image has already been proven
+compatible.
+
 ## Full training stack
 
 NLA is an extension layer on top of Miles + SGLang + (optionally) Megatron-LM.
