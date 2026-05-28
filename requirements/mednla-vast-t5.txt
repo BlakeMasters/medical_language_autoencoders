@@ -1,0 +1,13 @@
+# Vast T5 judge runtime for future live MedGemma scoring.
+#
+# Install only for a deliberate MedGemma judge run:
+#   python -m pip install -r requirements/mednla-vast-t5.txt
+#
+# The immediate minimal Vast smoke uses heuristic_v1 and does not need this
+# file. MedGemma models are gated; log in with Hugging Face and accept the model
+# terms before using medgemma_judge_v1.
+
+-e .
+pytest
+accelerate
+transformers>=4.50,<6
