@@ -41,6 +41,27 @@ Default for the current MedNLA pilot:
 Use A100/H100-class instances only for larger datagen/training configs or if
 the eval runner grows beyond the Qwen7B pilot footprint.
 
+## Runtime Profiles
+
+Use a plain CUDA/PyTorch runtime for T3 base probes and the Vast SGLang
+Inference Engine template for T4 decode. Keep them separate unless a specific
+image has already been proven to support both paths; installing `sglang[all]`
+into the T3 environment can replace the torch/transformers stack.
+
+For T3 on a PyTorch runtime:
+
+```bash
+cd /workspace/medical_language_autoencoders
+python -m pip install -r requirements/mednla-vast-t3.txt
+```
+
+For T4 inside the SGLang template:
+
+```bash
+cd /workspace/medical_language_autoencoders
+python -m pip install -r requirements/mednla-vast-t4-sglang.txt
+```
+
 ## SGLang Template Settings
 
 Prefer the Vast SGLang Inference Engine template over a plain PyTorch runtime
@@ -66,9 +87,10 @@ graph or JIT issues, append these flags to `SGLANG_ARGS`:
 ```
 
 The template serves SGLang on internal port `18000`. T4 currently defaults to
-`http://localhost:30000`, so either point `nla_decode.sglang_url` at
-`http://127.0.0.1:18000` on the remote config or launch a separate local SGLang
-server on port `30000`.
+`http://localhost:30000`; pass `--sglang-url http://127.0.0.1:18000` when using
+the template. If the template requires a bearer token, pass it through an
+environment variable with `--auth-token-env`; do not write tokens into YAML,
+tracked docs, or logs.
 
 ## Standard Flow
 
@@ -94,16 +116,23 @@ python scripts/mednla/prepare_items.py \
 For NLA actor inference smoke testing:
 
 ```bash
-python -m sglang.launch_server \
-  --model-path kitft/nla-qwen2.5-7b-L20-av \
-  --port 30000 \
-  --disable-radix-cache \
-  --mem-fraction-static 0.85 \
-  --trust-remote-code
+python scripts/mednla/check_sglang_ready.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --sglang-url http://127.0.0.1:18000
+```
 
-python nla_inference.py kitft/nla-qwen2.5-7b-L20-av \
-  --sglang-url http://localhost:30000 \
-  --n 1
+Then run T4 decode only after readiness passes:
+
+```bash
+python scripts/mednla/run_nla_decode.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --activations runs/mednla/pilot_qwen7b_medqa/activations.parquet \
+  --out runs/mednla/pilot_qwen7b_medqa/decodes.jsonl \
+  --no-critic \
+  --sglang-url http://127.0.0.1:18000 \
+  --manifest-out runs/mednla/pilot_qwen7b_medqa/decode_manifest.json
 ```
 
 When a full MedNLA eval runner is added, keep the same contract: checked-in

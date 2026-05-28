@@ -50,6 +50,17 @@ class DecodeSchemaError(RuntimeError):
     """Raised when an activation parquet is incompatible with the NLA sidecar."""
 
 
+def apply_sglang_auth_token(client: Any, auth_token: str | None) -> None:
+    """Attach a bearer token to an NLAClient without changing nla_inference.py."""
+    if not auth_token:
+        return
+    http_client = getattr(client, "_http", None)
+    headers = getattr(http_client, "headers", None)
+    if headers is None:
+        raise RuntimeError("NLAClient HTTP client does not expose headers for auth")
+    headers.update({"Authorization": f"Bearer {auth_token}"})
+
+
 def resolve_checkpoint_path(checkpoint_ref: str | Path) -> Path:
     """Return a local checkpoint directory for a local path or Hugging Face ID."""
     path = Path(str(checkpoint_ref))
@@ -75,6 +86,7 @@ class MedNLADecoder:
         av_path: str,
         ar_path: str | None,
         sglang_url: str,
+        sglang_auth_token: str | None = None,
         ar_device: str = "cuda",
         ar_dtype: str = "bfloat16",
     ) -> None:
@@ -83,6 +95,7 @@ class MedNLADecoder:
         self.av_checkpoint_path = resolve_checkpoint_path(av_path)
         self.ar_checkpoint_path = resolve_checkpoint_path(ar_path) if ar_path else None
         self.client = NLAClient(self.av_checkpoint_path, sglang_url=sglang_url, device="cpu")
+        apply_sglang_auth_token(self.client, sglang_auth_token)
         self.critic = (
             NLACritic(
                 self.ar_checkpoint_path,
@@ -252,6 +265,7 @@ __all__ = [
     "WARNING_LOW_RECONSTRUCTION_COSINE",
     "WARNING_MISSING_EXPLANATION_TAGS",
     "WARNING_VERY_SHORT_EXPLANATION",
+    "apply_sglang_auth_token",
     "resolve_checkpoint_path",
     "torch_dtype_from_name",
 ]

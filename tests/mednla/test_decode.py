@@ -39,7 +39,7 @@ class FakeClient:
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self._http = types.SimpleNamespace(close=lambda: None)
+        self._http = types.SimpleNamespace(headers={}, close=lambda: None)
 
     def generate(self, vec, *, extract_explanation, **kwargs):
         del kwargs
@@ -162,6 +162,17 @@ def test_no_critic_leaves_reconstruction_fields_none(tmp_path: Path) -> None:
     assert record.reconstruction_cos is None
 
 
+def test_decoder_applies_sglang_auth_token() -> None:
+    decoder = MedNLADecoder(
+        av_path="actor",
+        ar_path=None,
+        sglang_url="http://localhost:30000",
+        sglang_auth_token="secret-token",
+    )
+
+    assert decoder.client._http.headers["Authorization"] == "Bearer secret-token"
+
+
 def test_parquet_schema_mismatch_raises(tmp_path: Path) -> None:
     path = tmp_path / "bad.parquet"
     _write_activation_parquet(path, [0], d_model=D_MODEL + 1)
@@ -252,8 +263,12 @@ def _args(config: Path, activations: Path, out: Path, **overrides) -> argparse.N
         "out": str(out),
         "no_critic": True,
         "allow_cjk_warnings": False,
+        "sglang_url": None,
+        "auth_token": None,
+        "auth_token_env": None,
         "limit": None,
         "batch_size": None,
+        "manifest_out": None,
         "ar_device": "cpu",
         "ar_dtype": "bfloat16",
     }
@@ -275,6 +290,36 @@ def test_cli_atomic_write_success(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert not out.with_suffix(out.suffix + ".tmp").exists()
     row = orjson.loads(out.read_bytes().splitlines()[0])
     assert row["prediction_id"] == "pred:0"
+
+
+def test_cli_sglang_url_and_auth_token_env_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    class CapturingDecoder(FakeCliDecoder):
+        kwargs = None
+
+        def __init__(self, *args, **kwargs):
+            del args
+            type(self).kwargs = kwargs
+
+    config = tmp_path / "config.yaml"
+    activations = tmp_path / "activations.parquet"
+    out = tmp_path / "decodes.jsonl"
+    _config(config)
+    _write_activation_parquet(activations, [0])
+    monkeypatch.setenv("SGLANG_TOKEN", "secret-from-env")
+    monkeypatch.setattr(decode_cli, "MedNLADecoder", CapturingDecoder)
+
+    assert decode_cli._run(
+        _args(
+            config,
+            activations,
+            out,
+            sglang_url="http://127.0.0.1:18000",
+            auth_token_env="SGLANG_TOKEN",
+        )
+    ) == 0
+
+    assert CapturingDecoder.kwargs["sglang_url"] == "http://127.0.0.1:18000"
+    assert CapturingDecoder.kwargs["sglang_auth_token"] == "secret-from-env"
 
 
 def test_cli_cjk_abort_leaves_tmp_and_no_final(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

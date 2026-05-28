@@ -1,0 +1,11 @@
+# Vast T3 base-probe runtime.
+#
+# Install from the repo root on a CUDA/PyTorch image:
+#   python -m pip install -r requirements/mednla-vast-t3.txt
+#
+# Keep transformers below 5.x; the latest 5.x builds have broken against
+# PyTorch runtime images used for the Qwen7B pilot.
+
+-e .
+pytest
+transformers==4.46.3

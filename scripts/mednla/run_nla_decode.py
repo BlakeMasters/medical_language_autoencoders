@@ -6,7 +6,9 @@ import argparse
 import logging
 import os
 import sys
+import time
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,7 @@ from nla.mednla.decode import (
     DecodeSchemaError,
     MedNLADecoder,
 )
+from nla.mednla.run_manifest import build_run_manifest, write_run_manifest
 from nla.mednla.schema import to_dict
 
 logger = logging.getLogger("nla.mednla.run_nla_decode")
@@ -53,14 +56,30 @@ def _mean(values: list[float]) -> float | None:
     return float(np.mean(np.asarray(values, dtype=np.float64)))
 
 
+def _resolve_auth_token(args: argparse.Namespace) -> str | None:
+    auth_token = getattr(args, "auth_token", None)
+    auth_token_env = getattr(args, "auth_token_env", None)
+    if auth_token and auth_token_env:
+        raise ValueError("--auth-token and --auth-token-env are mutually exclusive")
+    if auth_token_env:
+        value = os.environ.get(auth_token_env)
+        if not value:
+            raise ValueError(f"environment variable {auth_token_env!r} is not set")
+        return value
+    return auth_token
+
+
 def _run(args: argparse.Namespace) -> int:
+    started_at_utc = datetime.now(timezone.utc).isoformat()
+    started = time.perf_counter()
     cfg = _load_yaml(Path(args.config))
     model_cfg = _resolve_model(cfg, args.model)
     decode_cfg = cfg.get("nla_decode", {})
     if not isinstance(decode_cfg, dict):
         raise ValueError("config nla_decode must be a mapping")
 
-    sglang_url = str(decode_cfg.get("sglang_url", "http://localhost:30000"))
+    sglang_url = args.sglang_url or str(decode_cfg.get("sglang_url", "http://localhost:30000"))
+    sglang_auth_token = _resolve_auth_token(args)
     temperature = float(decode_cfg.get("temperature", 0.7))
     max_new_tokens = int(decode_cfg.get("max_new_tokens", 200))
     batch_size = args.batch_size if args.batch_size is not None else int(decode_cfg.get("batch_size", 16))
@@ -75,6 +94,7 @@ def _run(args: argparse.Namespace) -> int:
             av_path=str(model_cfg["nla_actor"]),
             ar_path=str(ar_path) if ar_path else None,
             sglang_url=sglang_url,
+            sglang_auth_token=sglang_auth_token,
             ar_device=args.ar_device,
             ar_dtype=args.ar_dtype,
         )
@@ -135,6 +155,25 @@ def _run(args: argparse.Namespace) -> int:
         dict(sorted(warning_counts.items())),
         out_path,
     )
+    if args.manifest_out:
+        ended_at_utc = datetime.now(timezone.utc).isoformat()
+        manifest = build_run_manifest(
+            stage="mednla_decode",
+            started_at_utc=started_at_utc,
+            ended_at_utc=ended_at_utc,
+            duration_sec=time.perf_counter() - started,
+            config_path=args.config,
+            model_short_name=str(model_cfg["short_name"]),
+            args=vars(args),
+            outputs={"decodes": str(out_path)},
+            extra={
+                "total": total,
+                "parse_ok_rate": parse_ok_rate,
+                "warning_counts": dict(sorted(warning_counts.items())),
+                "mean_reconstruction_cos": mean_cos,
+            },
+        )
+        write_run_manifest(args.manifest_out, manifest)
     return 0
 
 
@@ -147,8 +186,12 @@ def main() -> int:
     parser.add_argument("--out", required=True, help="Output decodes JSONL.")
     parser.add_argument("--no-critic", action="store_true", help="Skip AR reconstruction scoring.")
     parser.add_argument("--allow-cjk-warnings", action="store_true", help="Continue after CJK injection warnings.")
+    parser.add_argument("--sglang-url", default=None, help="Override config nla_decode.sglang_url.")
+    parser.add_argument("--auth-token", default=None, help="Bearer token for SGLang API auth. Prefer --auth-token-env.")
+    parser.add_argument("--auth-token-env", default=None, help="Environment variable containing SGLang bearer token.")
     parser.add_argument("--limit", type=int, default=None, help="Limit decoded rows.")
     parser.add_argument("--batch-size", type=int, default=None, help="Override config nla_decode.batch_size.")
+    parser.add_argument("--manifest-out", default=None, help="Optional output run manifest JSON.")
     parser.add_argument("--ar-device", default="cuda", help="Torch device for NLACritic.")
     parser.add_argument("--ar-dtype", default="bfloat16", choices=["bfloat16", "float16", "float32"])
     args = parser.parse_args()

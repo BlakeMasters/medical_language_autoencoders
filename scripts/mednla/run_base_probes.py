@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,7 @@ from nla.mednla.probe import (
     assert_activation_parquet,
     load_nla_sidecar_d_model,
 )
+from nla.mednla.run_manifest import build_run_manifest, write_run_manifest
 from nla.mednla.schema import MedItem, VariantName, from_dict, to_dict
 
 logger = logging.getLogger("nla.mednla.run_base_probes")
@@ -108,6 +110,7 @@ def _write_partial_marker(path: Path, exc: BaseException) -> None:
 
 
 def _run(args: argparse.Namespace) -> int:
+    started_at_utc = datetime.now(timezone.utc).isoformat()
     started = time.perf_counter()
     config_path = Path(args.config)
     items_path = Path(args.items)
@@ -195,6 +198,24 @@ def _run(args: argparse.Namespace) -> int:
         "variant_seed": args.variant_seed,
     }
     _summary_path(predictions_out).write_bytes(orjson.dumps(summary, option=orjson.OPT_INDENT_2))
+    if args.manifest_out:
+        ended_at_utc = datetime.now(timezone.utc).isoformat()
+        manifest = build_run_manifest(
+            stage="mednla_base_probes",
+            started_at_utc=started_at_utc,
+            ended_at_utc=ended_at_utc,
+            duration_sec=elapsed_sec,
+            config_path=config_path,
+            model_short_name=str(model_cfg["short_name"]),
+            args=vars(args),
+            outputs={
+                "predictions": str(predictions_out),
+                "activations": str(activations_out),
+                "summary": str(_summary_path(predictions_out)),
+            },
+            extra=summary,
+        )
+        write_run_manifest(args.manifest_out, manifest)
     logger.info(
         "wrote_probes predictions=%d correct=%d activations=%s predictions_out=%s elapsed_sec=%.2f",
         n_predictions,
@@ -219,6 +240,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=None, help="Limit number of input items.")
     parser.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float16", "float32"])
     parser.add_argument("--device", default="cuda", help="Torch device, e.g. cuda, cuda:0, cpu.")
+    parser.add_argument("--manifest-out", default=None, help="Optional output run manifest JSON.")
     args = parser.parse_args()
 
     try:
