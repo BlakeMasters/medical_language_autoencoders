@@ -121,6 +121,53 @@ python scripts/mednla/analyze_results.py \
 
 For a heuristic-only smoke, pass only `scores_heuristic.jsonl` to `--scores`.
 
+## Eval Runner
+
+`run_eval_pipeline.py` is a local orchestrator for the same commands above. It
+does not rent Vast instances, start SGLang, or manage schedulers. Use it after
+the environment is ready and, for decode stages, after the operator has started
+SGLang separately.
+
+Dry-run the full GPU path before executing it:
+
+```bash
+python scripts/mednla/run_eval_pipeline.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --run-dir runs/mednla/pilot_qwen7b_medqa \
+  --stages prepare,probe,check_sglang,decode,score_heuristic,analysis,validate \
+  --sglang-url http://127.0.0.1:30000 \
+  --quick-analysis \
+  --dry-run
+```
+
+Run a CPU-safe local continuation after artifacts already exist:
+
+```bash
+python scripts/mednla/run_eval_pipeline.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --model qwen7b \
+  --run-dir runs/mednla/pilot_qwen7b_medqa \
+  --stages score_heuristic,analysis,validate \
+  --quick-analysis \
+  --resume
+```
+
+Validate a run directory directly:
+
+```bash
+python scripts/mednla/validate_run.py \
+  --config configs/mednla/pilot_qwen7b_medqa.yaml \
+  --run-dir runs/mednla/pilot_qwen7b_medqa \
+  --model qwen7b \
+  --require-analysis
+```
+
+The runner writes per-stage logs under `logs/`, passes `--manifest-out` where
+the underlying stage supports it, and writes `run_validation.json` during the
+validation stage. Use `--auth-token-env`, not a raw token, for SGLang endpoints
+that require authentication.
+
 ## Analysis Outputs
 
 T6 writes:
