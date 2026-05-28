@@ -6,7 +6,7 @@ datasets:
   - name: medqa
     hf_path: GBaker/MedQA-USMLE-4-options
     hf_config: null
-    revision: main
+    revision: 0fb93dd23a7339b6dcd27e241cb9b5eca62d4d18
     split: test
 
 models:

@@ -7,8 +7,14 @@ import re
 _FIRST_LINE_PATTERN = re.compile(
     r"^\s*\(([A-Z])\)\s*$|^\s*([A-Z])[\.\):]\s*$",
 )
+_LEADING_KEY_PATTERN = re.compile(r"^\s*\(?([A-Z])\)?[\.\):]\s+", re.IGNORECASE)
 _PREFIX_PATTERN = re.compile(
-    r"(?:Answer|Final answer|Selected answer)\s*[:\-]?\s*\(?([A-Z])\)?",
+    r"\b(?:Final answer|Selected answer|Correct answer|Best answer|Answer|Option|Choice)\b"
+    r"\s*(?:is|:|\-)?\s*\(?([A-Z])\)?\b",
+    re.IGNORECASE,
+)
+_CHOOSE_PATTERN = re.compile(
+    r"\b(?:choose|select|selected|pick)\s+(?:option\s+)?\(?([A-Z])\)?\b",
     re.IGNORECASE,
 )
 _KEY_BOUNDARY_PATTERN = re.compile(r"\b([A-Z])\b", re.IGNORECASE)
@@ -36,11 +42,18 @@ def parse_answer(
         if letter in key_set:
             return letter
 
-    prefix_window = text[:100]
-    for match in _PREFIX_PATTERN.finditer(prefix_window):
+    match = _LEADING_KEY_PATTERN.match(text)
+    if match:
         letter = match.group(1).upper()
         if letter in key_set:
             return letter
+
+    prefix_window = text[:100]
+    for pattern in (_PREFIX_PATTERN, _CHOOSE_PATTERN):
+        for match in pattern.finditer(prefix_window):
+            letter = match.group(1).upper()
+            if letter in key_set:
+                return letter
 
     if choice_texts is not None:
         normalized = text.strip().lower()

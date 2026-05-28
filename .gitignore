@@ -5,6 +5,12 @@ __pycache__/
 build/
 dist/
 
+# Local Python environments and secrets
+env/
+.env
+.env.*
+!.env.example
+
 # Local MedNLA / evaluation run outputs (not versioned)
 runs/
 
