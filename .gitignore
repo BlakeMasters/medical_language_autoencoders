@@ -11,11 +11,23 @@ env/
 .env.*
 !.env.example
 
-# Local MedNLA / evaluation run outputs (not versioned)
-runs/
+# Local MedNLA / evaluation run outputs.
+# Keep ad hoc runs ignored, but allow the cleaned report artifact release.
+runs/*
+!runs/mednla/
+runs/mednla/*
+!runs/mednla/report_qwen_medqa_n200/
+!runs/mednla/report_qwen_medqa_n200/**
 
 # Coding-agent workflow, work orders, and course context (local only)
 context/
 .cursor/
 .venv/
-.tex
+.tex/*
+!.tex/Formatting_Instructions_For_NeurIPS_2025/
+.tex/Formatting_Instructions_For_NeurIPS_2025/*
+!.tex/Formatting_Instructions_For_NeurIPS_2025/medical_nla_final_report.tex
+!.tex/Formatting_Instructions_For_NeurIPS_2025/medical_nla_final_report_overleaf.zip
+!.tex/Formatting_Instructions_For_NeurIPS_2025/neurips_2025.sty
+!.tex/Formatting_Instructions_For_NeurIPS_2025/figures/
+!.tex/Formatting_Instructions_For_NeurIPS_2025/figures/**

@@ -50,6 +50,14 @@ are different measurements, and the estimated aligned-explanation rate depends
 strongly on the scoring instrument. The report treats NLA explanations as
 auxiliary measurements, not literal model thoughts or clinical explanations.
 
+## Limitation
+
+The main practical limitation was bootstrapping the full research workflow as a
+solo project. Running base-model probes, SGLang decoding, reconstruction, and
+MedGemma judge scoring required paid GPU time, so the final evaluation was
+scoped to a clean 200-item MedQA run rather than the broader multi-model,
+multi-dataset study originally proposed.
+
 ## Repository Layout
 
 ```text
@@ -60,6 +68,7 @@ configs/mednla/      MedNLA pilot and report-run configs
 docs/mednla.md       End-to-end local pipeline documentation
 vast/                Vast/SGLang runtime notes and cost-control workflow
 requirements/        Stage-specific runtime constraints
+runs/mednla/         Clean release copy of the final report run artifacts
 .tex/                LaTeX report source and Overleaf-ready bundle
 ```
 
@@ -92,15 +101,26 @@ does not rent cloud instances or start SGLang automatically.
 
 ## Report Artifacts
 
-The LaTeX report source and Overleaf upload bundle are in:
+The cleaned report artifacts are versioned in:
+
+```text
+runs/mednla/report_qwen_medqa_n200/
+```
+
+This release directory contains the final items, predictions, activations,
+decodes, score files, manifests, analysis tables, figure data, validation
+output, and report bundle. No raw remote logs, transient PID files, local
+preflight machine details, canary outputs, or `.env` files are included.
+
+The LaTeX report source and Overleaf upload bundle are versioned in:
 
 ```text
 .tex/Formatting_Instructions_For_NeurIPS_2025/
 ```
 
-The generated report bundle includes summary tables, figure data, an audit
-queue, and a claims checklist. Run artifacts are stored under `runs/`, which is
-intentionally gitignored.
+Other ad hoc runtime outputs under `runs/` remain gitignored by default. Only
+the cleaned `runs/mednla/report_qwen_medqa_n200/` artifact release is intended
+for source control.
 
 ## Attribution
 

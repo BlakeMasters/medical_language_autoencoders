@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "stage": "mednla_base_probes",
+  "started_at_utc": "2026-05-29T05:12:29.976073+00:00",
+  "ended_at_utc": "2026-05-29T05:13:33.344049+00:00",
+  "duration_sec": 63.36776667833328,
+  "config_path": "configs/mednla/report_qwen7b_medqa_200.yaml",
+  "model_short_name": "qwen7b",
+  "args": {
+    "config": "configs/mednla/report_qwen7b_medqa_200.yaml",
+    "items": "runs/mednla/report_qwen_medqa_n200/items.jsonl",
+    "model": "qwen7b",
+    "predictions_out": "runs/mednla/report_qwen_medqa_n200/predictions.jsonl",
+    "activations_out": "runs/mednla/report_qwen_medqa_n200/activations.parquet",
+    "variants": null,
+    "variant_seed": 0,
+    "limit": null,
+    "dtype": "bfloat16",
+    "device": "cuda",
+    "manifest_out": "runs/mednla/report_qwen_medqa_n200/probe_manifest.json"
+  },
+  "outputs": {
+    "predictions": "runs/mednla/report_qwen_medqa_n200/predictions.jsonl",
+    "activations": "runs/mednla/report_qwen_medqa_n200/activations.parquet",
+    "summary": "runs/mednla/report_qwen_medqa_n200/_summary.json"
+  },
+  "git": {
+    "branch": null,
+    "sha": null,
+    "dirty": false,
+    "status_short": null
+  },
+  "python": {
+    "version": "3.11.9 (main, Apr 19 2024, 16:48:06) [GCC 11.2.0]",
+    "executable": "/opt/conda/bin/python",
+    "platform": "Linux-5.15.0-140-generic-x86_64-with-glibc2.35"
+  },
+  "packages": {
+    "torch": "2.4.0",
+    "transformers": "4.46.3",
+    "sglang": null,
+    "numpy": "1.26.4",
+    "pyarrow": "24.0.0",
+    "httpx": "0.28.1",
+    "orjson": "3.11.9",
+    "pyyaml": "6.0.1",
+    "datasets": "4.8.5"
+  },
+  "vast": {
+    "CONTAINER_ID": "38347984",
+    "GPU_COUNT": "1",
+    "VAST_CONTAINERLABEL": "C.38347984"
+  },
+  "extra": {
+    "n_predictions": 600,
+    "n_correct": 345,
+    "elapsed_sec": 63.36776667833328,
+    "d_model": 3584,
+    "model_short_name": "qwen7b",
+    "variants": [
+      "canonical",
+      "option_shuffle",
+      "compact"
+    ],
+    "variant_seed": 0
+  }
+}

@@ -1,0 +1,5 @@
+correct,scorer,n_with_rationale,mean_rationale_alignment,sd_rationale_alignment,fraction_alignment_ge_1
+False,heuristic_v1,0,,,
+False,medgemma_judge_v1,164,0.9390243902439024,0.2857408418014629,0.926829268292683
+True,heuristic_v1,0,,,
+True,medgemma_judge_v1,319,0.9937304075235109,0.07893215242642113,0.9937304075235109

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "stage": "mednla_decode",
+  "started_at_utc": "2026-05-29T05:20:27.922830+00:00",
+  "ended_at_utc": "2026-05-29T05:39:35.796891+00:00",
+  "duration_sec": 1147.874066978693,
+  "config_path": "configs/mednla/report_qwen7b_medqa_200.yaml",
+  "model_short_name": "qwen7b",
+  "args": {
+    "config": "configs/mednla/report_qwen7b_medqa_200.yaml",
+    "model": "qwen7b",
+    "activations": "runs/mednla/report_qwen_medqa_n200/activations.parquet",
+    "out": "runs/mednla/report_qwen_medqa_n200/decodes.jsonl",
+    "no_critic": false,
+    "allow_cjk_warnings": false,
+    "sglang_url": "http://127.0.0.1:18000",
+    "auth_token": null,
+    "auth_token_env": null,
+    "limit": null,
+    "batch_size": null,
+    "manifest_out": "runs/mednla/report_qwen_medqa_n200/decode_manifest.json",
+    "ar_device": "cuda",
+    "ar_dtype": "bfloat16"
+  },
+  "outputs": {
+    "decodes": "runs/mednla/report_qwen_medqa_n200/decodes.jsonl"
+  },
+  "git": {
+    "branch": null,
+    "sha": null,
+    "dirty": false,
+    "status_short": null
+  },
+  "python": {
+    "version": "3.11.9 (main, Apr 19 2024, 16:48:06) [GCC 11.2.0]",
+    "executable": "/opt/conda/bin/python",
+    "platform": "Linux-5.15.0-140-generic-x86_64-with-glibc2.35"
+  },
+  "packages": {
+    "torch": "2.9.1",
+    "transformers": "4.57.1",
+    "sglang": "0.5.6",
+    "numpy": "1.26.4",
+    "pyarrow": "24.0.0",
+    "httpx": "0.28.1",
+    "orjson": "3.11.9",
+    "pyyaml": "6.0.1",
+    "datasets": "4.8.5"
+  },
+  "vast": {
+    "CONTAINER_ID": "38347984",
+    "GPU_COUNT": "1",
+    "VAST_CONTAINERLABEL": "C.38347984"
+  },
+  "extra": {
+    "total": 600,
+    "parse_ok_rate": 1.0,
+    "warning_counts": {},
+    "mean_reconstruction_cos": 0.8284333311518033
+  }
+}

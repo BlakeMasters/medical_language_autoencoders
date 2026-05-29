@@ -1,0 +1,9 @@
+model_short_name,dataset,taxonomy_cell,count,proportion,proportion_ci_lo,proportion_ci_hi,scorer
+qwen7b,medqa,correct_aligned,27,0.045,0.023333333333333334,0.06833333333333333,heuristic_v1
+qwen7b,medqa,correct_weak,318,0.53,0.4666666666666667,0.5900833333333332,heuristic_v1
+qwen7b,medqa,incorrect_aligned,6,0.01,0.0016666666666666668,0.02,heuristic_v1
+qwen7b,medqa,incorrect_weak,249,0.415,0.35333333333333333,0.47837499999999994,heuristic_v1
+qwen7b,medqa,correct_aligned,317,0.5283333333333333,0.46825,0.5883333333333334,medgemma_judge_v1
+qwen7b,medqa,correct_weak,28,0.04666666666666667,0.03166666666666667,0.065,medgemma_judge_v1
+qwen7b,medqa,incorrect_aligned,149,0.24833333333333332,0.20166666666666666,0.2966666666666667,medgemma_judge_v1
+qwen7b,medqa,incorrect_weak,106,0.17666666666666667,0.13833333333333334,0.21833333333333332,medgemma_judge_v1

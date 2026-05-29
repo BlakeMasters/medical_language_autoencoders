@@ -1,0 +1,63 @@
+{
+  "run_dir": "runs/mednla/report_qwen_medqa_n200",
+  "out_dir": "runs/mednla/report_qwen_medqa_n200/report",
+  "artifact_paths": {
+    "items": "runs/mednla/report_qwen_medqa_n200/items.jsonl",
+    "predictions": "runs/mednla/report_qwen_medqa_n200/predictions.jsonl",
+    "decodes": "runs/mednla/report_qwen_medqa_n200/decodes.jsonl",
+    "scores": [
+      "runs/mednla/report_qwen_medqa_n200/scores_heuristic.jsonl",
+      "runs/mednla/report_qwen_medqa_n200/scores_judge.jsonl"
+    ],
+    "tables": {
+      "summary_by_model_dataset": "runs/mednla/report_qwen_medqa_n200/tables/summary_by_model_dataset.csv",
+      "taxonomy_by_model_dataset": "runs/mednla/report_qwen_medqa_n200/tables/taxonomy_by_model_dataset.csv",
+      "prompt_stability": "runs/mednla/report_qwen_medqa_n200/tables/prompt_stability.csv",
+      "failure_cases": "runs/mednla/report_qwen_medqa_n200/tables/failure_cases.jsonl"
+    },
+    "figures_data": {
+      "taxonomy_stack": "runs/mednla/report_qwen_medqa_n200/figures_data/taxonomy_stack.jsonl",
+      "accuracy_vs_aligned": "runs/mednla/report_qwen_medqa_n200/figures_data/accuracy_vs_aligned.jsonl",
+      "reconstruction_by_cell": "runs/mednla/report_qwen_medqa_n200/figures_data/reconstruction_by_cell.jsonl"
+    }
+  },
+  "counts": {
+    "items": 200,
+    "predictions": 600,
+    "decodes": 600,
+    "scores": 1200,
+    "joined_items": 200,
+    "joined_predictions": 600,
+    "joined_rows": 1200,
+    "audit_rows": 80,
+    "summary_rows": 2,
+    "taxonomy_rows": 8
+  },
+  "models": [
+    "qwen7b"
+  ],
+  "datasets": [
+    "medqa"
+  ],
+  "scorers": [
+    "heuristic_v1",
+    "medgemma_judge_v1"
+  ],
+  "taxonomy_cell_counts": {
+    "correct_aligned": 344,
+    "correct_weak": 346,
+    "incorrect_aligned": 155,
+    "incorrect_weak": 355
+  },
+  "missing_taxonomy_cells": [],
+  "unavailable_fields": {},
+  "include_raw_av_text": false,
+  "heuristic_only": false,
+  "outputs": {
+    "summary": "runs/mednla/report_qwen_medqa_n200/report/summary.md",
+    "audit_queue_csv": "runs/mednla/report_qwen_medqa_n200/report/audit_queue.csv",
+    "audit_queue_jsonl": "runs/mednla/report_qwen_medqa_n200/report/audit_queue.jsonl",
+    "claims_checklist": "runs/mednla/report_qwen_medqa_n200/report/claims_checklist.md",
+    "artifact_index": "runs/mednla/report_qwen_medqa_n200/report/artifact_index.json"
+  }
+}
