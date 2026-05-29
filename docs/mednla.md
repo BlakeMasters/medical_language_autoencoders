@@ -186,6 +186,38 @@ T6 writes:
 
 The CSVs and JSONL figure-data files are the analysis deliverable. Plot rendering is intentionally left to the report-writing workflow.
 
+## Report Bundle And Manual Audit
+
+After T6 writes analysis tables, export a CPU-only report bundle:
+
+```bash
+python scripts/mednla/export_report_bundle.py \
+  --run-dir runs/mednla/pilot_qwen7b_medqa
+```
+
+This writes `report/summary.md`, `report/audit_queue.csv`,
+`report/audit_queue.jsonl`, `report/claims_checklist.md`, and
+`report/artifact_index.json`. The audit queue contains blank human-review
+columns for checking whether the automated score seems reasonable, whether the
+decode confabulates, whether the gold rationale is incomplete, and whether the
+case should be highlighted qualitatively. `raw_av_text` is excluded by default;
+add `--include-raw-av-text` only when the raw decoder output is needed.
+
+For the current split local smoke layout:
+
+```bash
+python scripts/mednla/export_report_bundle.py \
+  --run-dir runs/t6_local_smoke/pilot_qwen7b_medqa \
+  --items runs/vast_smoke/runs/mednla/pilot_qwen7b_medqa/items.jsonl \
+  --predictions runs/vast_smoke/runs/mednla/pilot_qwen7b_medqa/predictions.jsonl \
+  --decodes runs/vast_t5_smoke/38303246/runs/mednla/pilot_qwen7b_medqa/decodes.jsonl \
+  --scores runs/vast_t5_smoke/38303246/runs/mednla/pilot_qwen7b_medqa/scores_heuristic.jsonl \
+  --out-dir runs/t9_local_smoke/report
+```
+
+Generate this bundle after analysis outputs exist. It does not run Vast,
+SGLang, GPU probes, decode, scoring, or analysis.
+
 ## Pilot Checklist
 
 Before scaling:
