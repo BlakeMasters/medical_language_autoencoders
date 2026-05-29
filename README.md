@@ -4,8 +4,8 @@ This repository contains the code and artifacts for **Do Medical QA Benchmarks
 Measure Medically Grounded Reasoning? A Natural Language Autoencoder Study of
 Latent Explanations**.
 
-- Paper: [ResearchGate preprint](https://www.researchgate.net/publication/405436619_Do_Medical_QA_Benchmarks_Measure_Medically_Grounded_Reasoning_A_Natural_Language_Autoencoder_Study_of_Latent_Explanations)
-- DOI: [10.13140/RG.2.2.22314.79044](https://doi.org/10.13140/RG.2.2.22314.79044)
+- Paper: [ResearchGate preprint](https://www.researchgate.net/publication/405437448_Do_Medical_QA_Benchmarks_Measure_Medically_Grounded_Reasoning_A_Natural_Language_Autoencoder_Study_of_Latent_Explanations)
+- DOI: [10.13140/RG.2.2.33219.98083](https://doi.org/10.13140/RG.2.2.33219.98083)
 
 ## Overview
 
@@ -138,8 +138,8 @@ For the medical QA study, cite:
   author = {Masters, Blake},
   title = {Do Medical QA Benchmarks Measure Medically Grounded Reasoning? A Natural Language Autoencoder Study of Latent Explanations},
   year = {2026},
-  doi = {10.13140/RG.2.2.22314.79044},
-  url = {https://www.researchgate.net/publication/405436619_Do_Medical_QA_Benchmarks_Measure_Medically_Grounded_Reasoning_A_Natural_Language_Autoencoder_Study_of_Latent_Explanations}
+  doi = {10.13140/RG.2.2.33219.98083},
+  url = {https://www.researchgate.net/publication/405437448_Do_Medical_QA_Benchmarks_Measure_Medically_Grounded_Reasoning_A_Natural_Language_Autoencoder_Study_of_Latent_Explanations}
 }
 ```
 
