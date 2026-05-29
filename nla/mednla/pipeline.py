@@ -12,6 +12,7 @@ import orjson
 import yaml
 
 STAGES = (
+    "preflight",
     "prepare",
     "probe",
     "check_sglang",
@@ -89,7 +90,15 @@ def build_stage_commands(options: PipelineOptions) -> list[StageCommand]:
     commands: list[StageCommand] = []
 
     for stage in options.stages:
-        if stage == "prepare":
+        if stage == "preflight":
+            argv = (
+                options.python_executable,
+                "scripts/mednla/preflight_runtime.py",
+                "--json-out",
+                str(run / "preflight_runtime.json"),
+            )
+            outputs = (run / "preflight_runtime.json",)
+        elif stage == "prepare":
             argv = (
                 options.python_executable,
                 "scripts/mednla/prepare_items.py",

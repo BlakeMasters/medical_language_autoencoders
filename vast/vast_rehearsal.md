@@ -96,13 +96,19 @@ dependencies:
 
 ```bash
 cd /workspace/medical_language_autoencoders
-python -m pip install -U pip
-python -m pip install -r requirements/mednla-vast-t4-sglang.txt
+python scripts/mednla/vast_bootstrap.py --profile t4-sglang --require-existing-torch
 ```
 
 The minimal budget smoke stops at live T4 decode plus deterministic T5
 `heuristic_v1` scoring. Use `requirements/mednla-vast-t5.txt` only for a
 separate, deliberate live MedGemma judge run.
+
+Cost guardrails:
+
+- Capture `vastai show user` before launch and after teardown.
+- Do not run model download or SGLang startup in the instance boot command.
+- Do not run broad T4 `pip install -r` commands that can reinstall CUDA/Torch.
+- Destroy any instance that misses the 120-second direct SSH gate.
 
 If the workspace was not cloned on the remote, sync it from local first using
 the `rsync` command in [vast_cli_reference.md](vast_cli_reference.md).
@@ -112,6 +118,7 @@ the `rsync` command in [vast_cli_reference.md](vast_cli_reference.md).
 ```bash
 cd /workspace/medical_language_autoencoders
 mkdir -p runs/vast_rehearsal
+python scripts/mednla/preflight_runtime.py --json-out runs/vast_rehearsal/preflight_runtime.json --require-torch
 python -m pytest tests/mednla -q
 python scripts/mednla/prepare_items.py \
   --config configs/mednla/pilot_qwen7b_medqa.yaml \

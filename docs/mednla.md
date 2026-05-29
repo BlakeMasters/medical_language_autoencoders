@@ -135,7 +135,7 @@ python scripts/mednla/run_eval_pipeline.py \
   --config configs/mednla/pilot_qwen7b_medqa.yaml \
   --model qwen7b \
   --run-dir runs/mednla/pilot_qwen7b_medqa \
-  --stages prepare,probe,check_sglang,decode,score_heuristic,analysis,validate \
+  --stages preflight,prepare,probe,check_sglang,decode,score_heuristic,analysis,validate \
   --sglang-url http://127.0.0.1:30000 \
   --quick-analysis \
   --dry-run
@@ -165,8 +165,10 @@ python scripts/mednla/validate_run.py \
 
 The runner writes per-stage logs under `logs/`, passes `--manifest-out` where
 the underlying stage supports it, and writes `run_validation.json` during the
-validation stage. Use `--auth-token-env`, not a raw token, for SGLang endpoints
-that require authentication.
+validation stage. The optional `preflight` stage writes `preflight_runtime.json`
+with Python, package, CUDA, command, and disk-space information. Use
+`--auth-token-env`, not a raw token, for SGLang endpoints that require
+authentication.
 
 ## Analysis Outputs
 
