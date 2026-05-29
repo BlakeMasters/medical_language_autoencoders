@@ -18,3 +18,4 @@ runs/
 context/
 .cursor/
 .venv/
+.tex

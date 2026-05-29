@@ -1,0 +1,44 @@
+run_id: report_qwen_medqa_n200
+seed: 42
+sample_size: 200
+
+datasets:
+  - name: medqa
+    hf_path: GBaker/MedQA-USMLE-4-options
+    hf_config: null
+    revision: 0fb93dd23a7339b6dcd27e241cb9b5eca62d4d18
+    split: test
+
+models:
+  - model_id: Qwen/Qwen2.5-7B-Instruct
+    short_name: qwen7b
+    layer_index: 20
+    d_model: 3584
+    nla_actor: kitft/nla-qwen2.5-7b-L20-av
+    nla_critic: kitft/nla-qwen2.5-7b-L20-ar
+
+prompt_variants:
+  - canonical
+  - option_shuffle
+  - compact
+
+generation:
+  max_new_tokens: 8
+  do_sample: false
+  temperature: 0.0
+
+nla_decode:
+  sglang_url: http://localhost:30000
+  temperature: 0.7
+  max_new_tokens: 200
+  batch_size: 16
+
+scoring:
+  judge_model: google/medgemma-4b-it
+  judge_loader: auto
+  judge_max_new_tokens: 400
+  judge_batch_size: 4
+
+analysis:
+  bootstrap_resamples: 1000
+  quick_bootstrap_resamples: 200
