@@ -10,4 +10,11 @@
 -e .
 pytest
 accelerate
-transformers>=4.50,<6
+# MedGemma/Gemma 3 generation uses torch mask helpers that require torch>=2.6
+# and torchvision must match the torch ABI on the base Vast PyTorch image.
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0+cu124
+torchvision==0.21.0+cu124
+# Keep this below 5 on the current Vast PyTorch 2.4 image. Transformers 5.x
+# imports image-text generation through torch APIs that are absent there.
+transformers>=4.57,<5

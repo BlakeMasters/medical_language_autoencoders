@@ -1,200 +1,141 @@
-# Natural Language Autoencoders (NLA)
+# Medical Natural Language Autoencoders
 
-Open-source library accompanying the Anthropic Transformer Circuits post
-**[Natural Language Autoencoders Produce Unsupervised Explanations of LLM Activations](https://transformer-circuits.pub/2026/nla/index.html)**.
+This repository contains the code and artifacts for **Do Medical QA Benchmarks
+Measure Medically Grounded Reasoning? A Natural Language Autoencoder Study of
+Latent Explanations**.
 
-📄 [Blog post](https://www.anthropic.com/research/natural-language-autoencoders) · ▶ [Video walkthrough](https://www.youtube.com/watch?v=j2knrqAzYVY) · 🔬 [Try the released NLAs on Neuronpedia](https://www.neuronpedia.org/nla)
+- Paper: [ResearchGate preprint](https://www.researchgate.net/publication/405436619_Do_Medical_QA_Benchmarks_Measure_Medically_Grounded_Reasoning_A_Natural_Language_Autoencoder_Study_of_Latent_Explanations)
+- DOI: [10.13140/RG.2.2.22314.79044](https://doi.org/10.13140/RG.2.2.22314.79044)
 
----
+## Overview
 
-A Natural Language Autoencoder is a pair of fine-tuned LMs that map
-residual-stream activation vectors to natural language and back:
+Medical QA benchmarks are often reported as evidence that a language model has
+medical knowledge or clinical reasoning ability. This project treats that as a
+measurement problem: final-answer accuracy is useful, but it may not tell us
+whether the model's internal representation contains medically grounded
+reasoning.
 
-| | direction | mechanism |
-|---|---|---|
-| **AV** (activation verbalizer) | `vector → text` | inject the vector as a single token embedding into a fixed prompt, autoregress a description |
-| **AR** (activation reconstructor) | `text → vector` | truncated K+1-layer LM + `Linear(d, d)` head, extract at the final token |
+The project applies **Natural Language Autoencoders (NLAs)** to medical
+multiple-choice QA. NLAs were introduced in the original Natural Language
+Autoencoders work as a way to decode model activations into natural language and
+reconstruct activations from that text. This repository builds on that released
+NLA infrastructure and asks whether decoded latent explanations provide
+auxiliary validity evidence for medical QA evaluation.
 
-Both vectors are L2-normalised before comparison, so the round-trip
-`MSE(reconstructed, original) = 2(1 − cos)` measures direction agreement only.
-Low MSE means the AR could recover the original direction from the AV's words
-alone, which implies the explanation captures the information in the vector.
+The completed report run evaluates:
 
-This is the **full training repo** — data generation, SFT, GRPO RL, and
-checkpoint conversion. For a lightweight inference-only package (just
-`NLAClient` + `NLACritic`, no training deps), see
-[`kitft/nla-inference`](https://github.com/kitft/nla-inference).
+- Base model: `Qwen/Qwen2.5-7B-Instruct`
+- NLA checkpoint: `kitft/nla-qwen2.5-7b-L20-av` with `kitft/nla-qwen2.5-7b-L20-ar`
+- Dataset: 200 MedQA test items from `GBaker/MedQA-USMLE-4-options`
+- Prompt variants: 3 per item, for 600 predictions and decoded explanations
+- Scorers: deterministic `heuristic_v1` and `medgemma_judge_v1`
 
-> **A note on naming.** Public-facing names are **AV** / **AR**. Inside the
-> `nla/` package you will see **actor** / **critic** — those are the same two
-> models, named to map directly onto Miles' RL primitives (the AV *is* the
-> policy actor; the AR *is* the value critic). The codebase keeps actor/critic
-> so the Miles extension points read naturally; everywhere user-facing we use
-> AV/AR.
+## Main Result
 
----
+The final validated run produced:
 
-## Released checkpoints
+| Metric | Value |
+| --- | ---: |
+| Items | 200 |
+| Prompt-variant predictions | 600 |
+| Decode parse-ok rate | 100% |
+| CJK injection warnings | 0 |
+| Answer accuracy | 57.5% |
+| Mean reconstruction cosine | 0.828 |
+| Heuristic aligned-explanation rate | 5.5% |
+| MedGemma judge aligned-explanation rate | 77.7% |
 
-All eight checkpoints are gathered in the
-**[`kitft/nla-models` collection](https://huggingface.co/collections/kitft/nla-models)**
-on the HF Hub — four base-model families, each with an AV and an AR. We extract
-from a layer roughly **two-thirds of the way through the model** in each case
-— deep enough that the residual stream carries rich semantic content, shallow
-enough that it hasn't yet collapsed toward the unembedding.
+The central finding is that final-answer accuracy and NLA explanation quality
+are different measurements, and the estimated aligned-explanation rate depends
+strongly on the scoring instrument. The report treats NLA explanations as
+auxiliary measurements, not literal model thoughts or clinical explanations.
 
-| base model | layer | d_model | AV | AR |
-|---|---|---|---|---|
-| Qwen2.5-7B-Instruct | 20 / 28 | 3584 | [`kitft/nla-qwen2.5-7b-L20-av`](https://huggingface.co/kitft/nla-qwen2.5-7b-L20-av) | [`kitft/nla-qwen2.5-7b-L20-ar`](https://huggingface.co/kitft/nla-qwen2.5-7b-L20-ar) |
-| Gemma-3-12B-IT | 32 / 48 | 3840 | [`kitft/nla-gemma3-12b-L32-av`](https://huggingface.co/kitft/nla-gemma3-12b-L32-av) | [`kitft/nla-gemma3-12b-L32-ar`](https://huggingface.co/kitft/nla-gemma3-12b-L32-ar) |
-| Gemma-3-27B-IT | 41 / 62 | 5376 | [`kitft/nla-gemma3-27b-L41-av`](https://huggingface.co/kitft/nla-gemma3-27b-L41-av) | [`kitft/nla-gemma3-27b-L41-ar`](https://huggingface.co/kitft/nla-gemma3-27b-L41-ar) |
-| Llama-3.3-70B-Instruct | 53 / 80 | 8192 | [`kitft/Llama-3.3-70B-NLA-L53-av`](https://huggingface.co/kitft/Llama-3.3-70B-NLA-L53-av) | [`kitft/Llama-3.3-70B-NLA-L53-ar`](https://huggingface.co/kitft/Llama-3.3-70B-NLA-L53-ar) |
+## Repository Layout
 
-Each checkpoint ships an `nla_meta.yaml` sidecar with the prompt template,
-injection token IDs, and scale factors that the model was trained with — load
-those, never hardcode them.
+```text
+nla/mednla/          MedNLA data schemas, probing, decoding, scoring, analysis,
+                     validation, pipeline, and reporting helpers
+scripts/mednla/      CLI entrypoints for T1-T9 pipeline stages
+configs/mednla/      MedNLA pilot and report-run configs
+docs/mednla.md       End-to-end local pipeline documentation
+vast/                Vast/SGLang runtime notes and cost-control workflow
+requirements/        Stage-specific runtime constraints
+.tex/                LaTeX report source and Overleaf-ready bundle
+```
 
----
+The original upstream NLA training and inference code remains in the repository
+because this project builds on it. The MedNLA additions live primarily under
+`nla/mednla/`, `scripts/mednla/`, `configs/mednla/`, and `docs/mednla.md`.
 
-## How it fits together
+## Quick Start
 
-NLA training is built as a thin extension on top of two open-source projects:
-
-- **[Miles](https://github.com/radixark/miles)** — Ray-orchestrated RL training
-  (FSDP2 / Megatron backends, GRPO, async rollout). We used the FSDP backend
-  for the 7B/12B/27B runs and Megatron only for Llama-70B. NLA plugs in via Miles'
-  upstream `--custom-rm-path`, `--data-source-path`, and
-  `--custom-generate-function-path` extension points; the integration patch in
-  `nla/miles_patches/` adds `--custom-actor-cls-path` and `--force-use-critic`
-  on top (see [docs/design.md §2](docs/design.md)).
-- **[SGLang](https://github.com/sgl-project/sglang)** — rollout serving. We
-  send `input_embeds` (not `input_ids`) so the AV sees the injected vector;
-  SGLang serves it like any other request. The embed sequence is built on the
-  **trainer side** — we look up the prompt tokens in the actor's own embedding
-  table, splice the activation vector in at the injection slot, and ship the
-  finished `[seq, d]` tensor over HTTP. SGLang never needs to know what an
-  injection is. We don't apply any learned map to the injected vector in this
-  work — it goes in raw (after a fixed scalar `injection_scale`) — but this
-  design means a future affine `W·v + b` adapter would be a trainer-side-only
-  change: apply it before sending, no SGLang modification required. (vLLM also
-  supports `input_embeds` and would work as a drop-in alternative.)
-
-We chose this stack because it is **near-frontier training infrastructure**:
-Miles + Megatron is what production-scale RL post-training looks like, and
-hooking onto it cleanly is what let us scale to RL-ing a 70B-parameter AV — and
-likely further. The `nla/` package never modifies Miles or SGLang in place; it
-only subclasses and registers function-pointer hooks, so upstream updates pull
-in cleanly.
-
----
-
-## Quick start
-
-### Inference (use a released checkpoint)
+Install the package in editable mode:
 
 ```bash
-uv pip install torch transformers safetensors httpx orjson pyyaml numpy
-uv pip install "sglang[all]>=0.5.6"
-
-python -m sglang.launch_server --model-path kitft/nla-qwen2.5-7b-L20-av \
-    --port 30000 --disable-radix-cache &
-
-python nla_inference.py kitft/nla-qwen2.5-7b-L20-av \
-    --sglang-url http://localhost:30000 \
-    --parquet path/to/activations.parquet
+python -m pip install -e .
 ```
 
-Don't have a parquet yet? Any file with an `activation_vector` column of
-`d_model`-wide float lists will do — here's a minimal one for Qwen layer 20:
-
-```python
-import torch, pyarrow as pa, pyarrow.parquet as pq
-from transformers import AutoModelForCausalLM, AutoTokenizer
-tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-7B-Instruct")
-m = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-7B-Instruct",
-        torch_dtype=torch.bfloat16, device_map="cuda")
-ids = tok("The quick brown fox jumps over the lazy dog.", return_tensors="pt").to("cuda")
-hs = m(**ids, output_hidden_states=True).hidden_states[20][0]  # [seq, 3584]
-pq.write_table(pa.table({"activation_vector": hs.float().cpu().tolist()}), "demo.parquet")
-```
-
-(Or omit `--parquet` entirely for a smoke test on a random unit vector.)
-
-`nla_inference.py` is a single self-contained file. The full recipe —
-model-specific scale factors, the Gemma `√d` embed-scale gotcha, debugging the
-"output is in Chinese" failure mode, AR scoring — is in
-**[docs/inference.md](docs/inference.md)**. Worked transcripts in
-[`examples/`](examples/).
-
-### Training (reproduce a checkpoint)
-
-Install Miles + SGLang + this package per **[docs/setup.md](docs/setup.md)**,
-then run the three stages (Qwen7B reference: SFT on 2×H100-80GB; RL to ~75% FVE
-on 2×8×H100 — see [`configs/TRAINING_NOTES.md`](configs/TRAINING_NOTES.md)):
+For the full pipeline, use the detailed recipe in
+[`docs/mednla.md`](docs/mednla.md). The main stage commands are:
 
 ```bash
-# 0. Generate data (GPU + ANTHROPIC_API_KEY)
-python -m nla.datagen.run_pipeline --config configs/datagen/qwen7b_fineweb_1M.yaml
-
-# 1. AR SFT (MSE on raw activations)
-bash configs/critic_sft.sh
-
-# 2. AV SFT (next-token on API-generated explanations, with injection)
-bash configs/actor_sft.sh
-
-# 3. RL: simultaneous AV (GRPO) + AR (supervised); reward = -mse_nrm
-bash configs/rl.sh
+python scripts/mednla/prepare_items.py --config configs/mednla/pilot_qwen7b_medqa.yaml --output runs/mednla/pilot_qwen7b_medqa/items.jsonl
+python scripts/mednla/run_base_probes.py --config configs/mednla/pilot_qwen7b_medqa.yaml --items runs/mednla/pilot_qwen7b_medqa/items.jsonl --model qwen7b --predictions-out runs/mednla/pilot_qwen7b_medqa/predictions.jsonl --activations-out runs/mednla/pilot_qwen7b_medqa/activations.parquet
+python scripts/mednla/run_nla_decode.py --config configs/mednla/pilot_qwen7b_medqa.yaml --model qwen7b --activations runs/mednla/pilot_qwen7b_medqa/activations.parquet --out runs/mednla/pilot_qwen7b_medqa/decodes.jsonl --sglang-url http://127.0.0.1:30000
+python scripts/mednla/score_explanations.py --config configs/mednla/pilot_qwen7b_medqa.yaml --items runs/mednla/pilot_qwen7b_medqa/items.jsonl --predictions runs/mednla/pilot_qwen7b_medqa/predictions.jsonl --decodes runs/mednla/pilot_qwen7b_medqa/decodes.jsonl --out runs/mednla/pilot_qwen7b_medqa/scores_heuristic.jsonl --scorer heuristic_v1
+python scripts/mednla/analyze_results.py --config configs/mednla/pilot_qwen7b_medqa.yaml --items runs/mednla/pilot_qwen7b_medqa/items.jsonl --predictions runs/mednla/pilot_qwen7b_medqa/predictions.jsonl --decodes runs/mednla/pilot_qwen7b_medqa/decodes.jsonl --scores runs/mednla/pilot_qwen7b_medqa/scores_heuristic.jsonl --out-dir runs/mednla/pilot_qwen7b_medqa
 ```
 
-The full design — data transport through Miles' `multimodal_train_inputs`, the
-injection forward-hook, simultaneous AV/AR scheduling, why `cp_size==1` — is in
-**[docs/design.md](docs/design.md)**. Detailed profiling and hyperparameter
-notes (Qwen7B case study; we reused those settings with only light adjustment
-for the other models — a per-model sweep would likely do better):
-[`configs/TRAINING_NOTES.md`](configs/TRAINING_NOTES.md).
+For GPU/Vast execution, see [`vast/README.md`](vast/README.md). The runner
+`scripts/mednla/run_eval_pipeline.py` can orchestrate prepared stages, but it
+does not rent cloud instances or start SGLang automatically.
 
----
+## Report Artifacts
 
-## Repo layout
+The LaTeX report source and Overleaf upload bundle are in:
 
-```
-nla/                  core package
-  schema.py, config.py, models.py     — sidecar contract, NLACriticModel (the AR)
-  train_actor.py                      — NLAFSDPActor (Miles FSDP subclass)
-  megatron/                           — NLAMegatronActor (TP+PP, CP=1 only)
-  rollout/                            — SFT rollout, nla_generate (SGLang input_embeds)
-  reward.py, loss.py                  — -mse_nrm reward, AR MSE loss
-  datagen/                            — 4-stage activation → parquet pipeline
-configs/              training shell configs + datagen YAMLs
-scripts/              multi-GPU launch wrappers (datagen)
-patches/              SGLang training patches (bf16 transport, chunked-prefill) + apply script
-tools/                FSDP-DCP / Megatron-dist ↔ HF checkpoint converters
-docs/                 design.md (training), inference.md (serving)
-release/              HF model-card templates + sidecar sanitiser for releases
-nla_inference.py      standalone single-file inference client
-examples/             worked decode transcripts
+```text
+.tex/Formatting_Instructions_For_NeurIPS_2025/
 ```
 
----
+The generated report bundle includes summary tables, figure data, an audit
+queue, and a claims checklist. Run artifacts are stored under `runs/`, which is
+intentionally gitignored.
 
-## Citation
+## Attribution
 
-For attribution in academic contexts, please cite this work as
+This project depends on the released Natural Language Autoencoders method,
+checkpoints, and inference tooling:
 
-> Fraser-Taliente, Kantamneni, Ong et al., "Natural Language Autoencoders Produce Unsupervised Explanations of LLM Activations", Transformer Circuits, 2026.
+- Anthropic, "Natural Language Autoencoders: Turning Claude's thoughts into text"
+- `kitft/natural_language_autoencoders`
+- `kitft/nla-inference`
+
+For the medical QA study, cite:
+
+```bibtex
+@misc{masters2026medicalnla,
+  author = {Masters, Blake},
+  title = {Do Medical QA Benchmarks Measure Medically Grounded Reasoning? A Natural Language Autoencoder Study of Latent Explanations},
+  year = {2026},
+  doi = {10.13140/RG.2.2.22314.79044},
+  url = {https://www.researchgate.net/publication/405436619_Do_Medical_QA_Benchmarks_Measure_Medically_Grounded_Reasoning_A_Natural_Language_Autoencoder_Study_of_Latent_Explanations}
+}
+```
+
+For the original NLA work, cite:
 
 ```bibtex
 @article{frasertaliente2026nla,
-  author  = {Fraser-Taliente, Kit and Kantamneni, Subhash and Ong, Euan and Mossing, Dan and Lu, Christina and Bogdan, Paul C. and Ameisen, Emmanuel and Chen, James and Kishylau, Dzmitry and Pearce, Adam and Tarng, Julius and Wu, Alex and Wu, Jeff and Zhang, Yang and Ziegler, Daniel M. and Hubinger, Evan and Batson, Joshua and Lindsey, Jack and Zimmerman, Samuel and Marks, Samuel},
-  title   = {Natural Language Autoencoders Produce Unsupervised Explanations of LLM Activations},
+  author = {Fraser-Taliente, Kit and Kantamneni, Subhash and Ong, Euan and Mossing, Dan and Lu, Christina and Bogdan, Paul C. and Ameisen, Emmanuel and Chen, James and Kishylau, Dzmitry and Pearce, Adam and Tarng, Julius and Wu, Alex and Wu, Jeff and Zhang, Yang and Ziegler, Daniel M. and Hubinger, Evan and Batson, Joshua and Lindsey, Jack and Zimmerman, Samuel and Marks, Samuel},
+  title = {Natural Language Autoencoders Produce Unsupervised Explanations of LLM Activations},
   journal = {Transformer Circuits Thread},
-  year    = {2026},
-  url     = {https://transformer-circuits.pub/2026/nla/index.html}
+  year = {2026},
+  url = {https://transformer-circuits.pub/2026/nla/index.html}
 }
 ```
 
 ## License
 
-Apache-2.0 ([LICENSE](LICENSE)). Released checkpoints additionally inherit the
-license of their base model (Gemma, Llama-3.3) — see the NOTICE files in each
-HF repo.
+This repository preserves the upstream Apache-2.0 license. Released checkpoints
+also inherit the licenses and use restrictions of their base models.
