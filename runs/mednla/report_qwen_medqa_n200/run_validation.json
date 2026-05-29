@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "thresholds": {
+    "parse_ok_rate_min": 0.8,
+    "cjk_injection_failure_max": 0
+  },
+  "counts": {
+    "items": 200,
+    "predictions": 600,
+    "decodes": 600,
+    "parse_ok": 600,
+    "parse_ok_rate": 1.0,
+    "cjk_injection_failure": 0,
+    "scores_by_scorer": {
+      "heuristic_v1": 600,
+      "medgemma_judge_v1": 600
+    },
+    "taxonomy_cells": {
+      "correct_aligned": 344,
+      "correct_weak": 346,
+      "incorrect_aligned": 155,
+      "incorrect_weak": 355
+    }
+  },
+  "artifacts": {
+    "items": "runs\\mednla\\report_qwen_medqa_n200\\items.jsonl",
+    "predictions": "runs\\mednla\\report_qwen_medqa_n200\\predictions.jsonl",
+    "activations": "runs\\mednla\\report_qwen_medqa_n200\\activations.parquet",
+    "decodes": "runs\\mednla\\report_qwen_medqa_n200\\decodes.jsonl",
+    "scores_heuristic": "runs\\mednla\\report_qwen_medqa_n200\\scores_heuristic.jsonl",
+    "scores_judge": "runs\\mednla\\report_qwen_medqa_n200\\scores_judge.jsonl"
+  },
+  "analysis_outputs_present": true
+}

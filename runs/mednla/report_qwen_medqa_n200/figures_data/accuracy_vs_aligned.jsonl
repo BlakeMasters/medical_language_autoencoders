@@ -1,0 +1,4 @@
+{"model_short_name":"qwen7b","dataset":"medqa","subject":"step1","scorer":"heuristic_v1","n_items":107,"n_predictions":321,"accuracy":0.5451713395638629,"aligned_rate":0.040498442367601244,"correct_weak_rate":0.5171339563862928}
+{"model_short_name":"qwen7b","dataset":"medqa","subject":"step1","scorer":"medgemma_judge_v1","n_items":107,"n_predictions":321,"accuracy":0.5451713395638629,"aligned_rate":0.7601246105919003,"correct_weak_rate":0.04361370716510903}
+{"model_short_name":"qwen7b","dataset":"medqa","subject":"step2&3","scorer":"heuristic_v1","n_items":93,"n_predictions":279,"accuracy":0.6093189964157706,"aligned_rate":0.07168458781362007,"correct_weak_rate":0.5448028673835126}
+{"model_short_name":"qwen7b","dataset":"medqa","subject":"step2&3","scorer":"medgemma_judge_v1","n_items":93,"n_predictions":279,"accuracy":0.6093189964157706,"aligned_rate":0.7956989247311828,"correct_weak_rate":0.05017921146953405}

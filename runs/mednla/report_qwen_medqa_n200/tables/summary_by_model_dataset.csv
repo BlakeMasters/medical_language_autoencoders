@@ -1,0 +1,3 @@
+model_short_name,dataset,n_items,n_predictions,accuracy,accuracy_ci_lo,accuracy_ci_hi,aligned_rate,aligned_rate_ci_lo,aligned_rate_ci_hi,mean_reconstruction_cos,mean_reconstruction_mse,scorer
+qwen7b,medqa,200,600,0.575,0.5149583333333333,0.6383333333333333,0.055,0.03166666666666667,0.0817083333333333,0.8284333311518033,0.3431337035695712,heuristic_v1
+qwen7b,medqa,200,600,0.575,0.5149583333333333,0.6383333333333333,0.7766666666666666,0.735,0.8133333333333334,0.8284333311518033,0.3431337035695712,medgemma_judge_v1

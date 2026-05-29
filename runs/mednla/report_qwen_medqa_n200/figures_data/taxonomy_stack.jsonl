@@ -1,0 +1,8 @@
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"correct_aligned","count":27,"proportion":0.045,"proportion_ci_lo":0.023333333333333334,"proportion_ci_hi":0.06833333333333333,"scorer":"heuristic_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"correct_weak","count":318,"proportion":0.53,"proportion_ci_lo":0.4666666666666667,"proportion_ci_hi":0.5900833333333332,"scorer":"heuristic_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"incorrect_aligned","count":6,"proportion":0.01,"proportion_ci_lo":0.0016666666666666668,"proportion_ci_hi":0.02,"scorer":"heuristic_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"incorrect_weak","count":249,"proportion":0.415,"proportion_ci_lo":0.35333333333333333,"proportion_ci_hi":0.47837499999999994,"scorer":"heuristic_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"correct_aligned","count":317,"proportion":0.5283333333333333,"proportion_ci_lo":0.46825,"proportion_ci_hi":0.5883333333333334,"scorer":"medgemma_judge_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"correct_weak","count":28,"proportion":0.04666666666666667,"proportion_ci_lo":0.03166666666666667,"proportion_ci_hi":0.065,"scorer":"medgemma_judge_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"incorrect_aligned","count":149,"proportion":0.24833333333333332,"proportion_ci_lo":0.20166666666666666,"proportion_ci_hi":0.2966666666666667,"scorer":"medgemma_judge_v1"}
+{"model_short_name":"qwen7b","dataset":"medqa","taxonomy_cell":"incorrect_weak","count":106,"proportion":0.17666666666666667,"proportion_ci_lo":0.13833333333333334,"proportion_ci_hi":0.21833333333333332,"scorer":"medgemma_judge_v1"}
