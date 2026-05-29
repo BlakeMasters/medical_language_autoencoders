@@ -145,6 +145,7 @@ def test_cli_writes_summary_and_exits_8_for_missing_artifacts(tmp_path: Path) ->
             parse_ok_threshold=0.8,
             require_analysis=True,
             require_judge_score=False,
+            require_manifests=False,
         )
     )
 
@@ -215,3 +216,14 @@ def test_require_judge_score_fails_when_absent(tmp_path: Path) -> None:
 
     assert summary["ok"] is False
     assert any("missing scores_judge.jsonl" in error for error in summary["errors"])
+
+
+def test_require_manifests_checks_stage_manifest_files(tmp_path: Path) -> None:
+    _make_run(tmp_path)
+
+    summary = validate_run(
+        ValidationOptions(config=_config(), run_dir=tmp_path, model_short_name="qwen7b", require_manifests=True)
+    )
+
+    assert summary["ok"] is False
+    assert any("missing manifest probe_manifest.json" in error for error in summary["errors"])

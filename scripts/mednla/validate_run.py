@@ -39,6 +39,7 @@ def _run(args: argparse.Namespace) -> int:
             parse_ok_threshold=args.parse_ok_threshold,
             require_analysis=args.require_analysis,
             require_judge_score=args.require_judge_score,
+            require_manifests=args.require_manifests,
         )
     )
     write_validation_summary(out_path, summary)
@@ -59,6 +60,7 @@ def main() -> int:
     parser.add_argument("--parse-ok-threshold", type=float, default=0.8)
     parser.add_argument("--require-analysis", action="store_true", help="Require T6 analysis table/figure outputs.")
     parser.add_argument("--require-judge-score", action="store_true", help="Require scores_judge.jsonl.")
+    parser.add_argument("--require-manifests", action="store_true", help="Require stage manifest JSON files.")
     args = parser.parse_args()
     try:
         return _run(args)

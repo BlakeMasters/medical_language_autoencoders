@@ -39,7 +39,7 @@ def test_build_stage_commands_use_current_scripts_and_artifacts(tmp_path: Path) 
         config=Path("configs/mednla/pilot_qwen7b_medqa.yaml"),
         model="qwen7b",
         run_dir=tmp_path / "run",
-        stages=parse_stage_list("prepare,probe,check_sglang,decode,score_heuristic,analysis,validate"),
+        stages=parse_stage_list("preflight,prepare,probe,check_sglang,decode,score_heuristic,analysis,validate"),
         quick_analysis=True,
         sglang_url="http://127.0.0.1:18000",
         no_critic=True,
@@ -49,6 +49,7 @@ def test_build_stage_commands_use_current_scripts_and_artifacts(tmp_path: Path) 
     commands = build_stage_commands(options)
 
     assert [command.name for command in commands] == [
+        "preflight",
         "prepare",
         "probe",
         "check_sglang",
@@ -58,6 +59,7 @@ def test_build_stage_commands_use_current_scripts_and_artifacts(tmp_path: Path) 
         "validate",
     ]
     by_name = {command.name: command for command in commands}
+    assert "scripts/mednla/preflight_runtime.py" in by_name["preflight"].argv
     assert "scripts/mednla/prepare_items.py" in by_name["prepare"].argv
     assert "scripts/mednla/run_base_probes.py" in by_name["probe"].argv
     assert "scripts/mednla/check_sglang_ready.py" in by_name["check_sglang"].argv
@@ -70,10 +72,17 @@ def test_build_stage_commands_use_current_scripts_and_artifacts(tmp_path: Path) 
     assert tmp_path / "run" / "activations.parquet" in by_name["probe"].outputs
     assert "--quick" in by_name["analysis"].argv
     assert "--require-analysis" in by_name["validate"].argv
+    assert by_name["preflight"].outputs == (tmp_path / "run" / "preflight_runtime.json",)
+    assert by_name["preflight"].log_path == tmp_path / "run" / "logs" / "preflight.log"
 
 
 def test_stage_selection_preserves_order_and_rejects_unknown() -> None:
-    assert parse_stage_list("decode,score_heuristic,validate") == ("decode", "score_heuristic", "validate")
+    assert parse_stage_list("preflight,decode,score_heuristic,validate") == (
+        "preflight",
+        "decode",
+        "score_heuristic",
+        "validate",
+    )
     assert parse_stage_list(None, include_judge=True) == (
         "prepare",
         "score_heuristic",
@@ -97,11 +106,12 @@ def test_dry_run_does_not_execute_subprocess(monkeypatch: pytest.MonkeyPatch, tm
 
     monkeypatch.setattr(pipeline_cli.subprocess, "run", fake_run)
 
-    rc = pipeline_cli._run(_args(config, tmp_path / "run", stages="prepare,validate", dry_run=True))
+    rc = pipeline_cli._run(_args(config, tmp_path / "run", stages="preflight,prepare,validate", dry_run=True))
 
     assert rc == 0
     assert calls == []
     out = capsys.readouterr().out
+    assert "scripts/mednla/preflight_runtime.py" in out
     assert "scripts/mednla/prepare_items.py" in out
     assert "scripts/mednla/validate_run.py" in out
 

@@ -24,6 +24,12 @@ ANALYSIS_OUTPUTS = (
     "figures_data/reconstruction_by_cell.jsonl",
     "_summary.json",
 )
+MANIFEST_OUTPUTS = (
+    "probe_manifest.json",
+    "decode_manifest.json",
+    "score_heuristic_manifest.json",
+    "analysis_manifest.json",
+)
 
 
 class RunValidationIOError(RuntimeError):
@@ -38,6 +44,7 @@ class ValidationOptions:
     parse_ok_threshold: float = 0.8
     require_analysis: bool = False
     require_judge_score: bool = False
+    require_manifests: bool = False
 
 
 def validate_run(options: ValidationOptions) -> dict[str, Any]:
@@ -80,6 +87,7 @@ def validate_run(options: ValidationOptions) -> dict[str, Any]:
     _check_decodes(predictions, decodes, decode_index, errors)
     _check_scores(prediction_index, score_groups, errors)
     _check_analysis_outputs(run, options.require_analysis, errors)
+    _check_manifest_outputs(run, options.require_manifests, options.require_judge_score, errors)
 
     total_decodes = len(decodes)
     parse_ok = sum(1 for decode in decodes if decode.parse_ok)
@@ -241,9 +249,29 @@ def _check_analysis_outputs(run: Path, require_analysis: bool, errors: list[str]
             errors.append(f"empty analysis output {rel_path}")
 
 
+def _check_manifest_outputs(
+    run: Path,
+    require_manifests: bool,
+    require_judge_score: bool,
+    errors: list[str],
+) -> None:
+    if not require_manifests:
+        return
+    expected = list(MANIFEST_OUTPUTS)
+    if require_judge_score:
+        expected.append("score_judge_manifest.json")
+    for rel_path in expected:
+        path = run / rel_path
+        if not path.exists():
+            errors.append(f"missing manifest {rel_path}")
+        elif path.stat().st_size <= 0:
+            errors.append(f"empty manifest {rel_path}")
+
+
 __all__ = [
     "ANALYSIS_OUTPUTS",
     "CJK_WARNING",
+    "MANIFEST_OUTPUTS",
     "RunValidationIOError",
     "ValidationOptions",
     "validate_run",

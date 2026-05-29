@@ -1,11 +1,21 @@
-# Vast T4 decode runtime for the managed SGLang template.
+# Lightweight client/test dependencies for the Vast T4 SGLang runtime.
 #
-# Install from the repo root inside the SGLang template container:
-#   python -m pip install -r requirements/mednla-vast-t4-sglang.txt
+# Preferred install entrypoint from the repo root:
+#   python scripts/mednla/vast_bootstrap.py --profile t4-sglang --require-existing-torch
 #
-# Do not add sglang[all] here. The template owns the SGLang/CUDA stack; this
-# file installs only this repo and keeps client-side libraries bounded.
+# Do not install this file as a replacement for the bootstrap helper unless
+# the repo itself was already installed with:
+#   python -m pip install --no-deps -e .
+#
+# Do not add torch or sglang[all] here. The SGLang template owns the
+# SGLang/CUDA stack; this file stays client-side and bounded.
 
--e .
 pytest
+orjson
+pyyaml
+numpy
+pyarrow
+httpx
+safetensors
+huggingface_hub
 transformers>=4.46,<5

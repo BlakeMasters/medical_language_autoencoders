@@ -59,7 +59,7 @@ For T4 inside a SGLang-ready image:
 
 ```bash
 cd /workspace/medical_language_autoencoders
-python -m pip install -r requirements/mednla-vast-t4-sglang.txt
+python scripts/mednla/vast_bootstrap.py --profile t4-sglang --require-existing-torch
 ```
 
 For a deliberate future T5 MedGemma judge run, use
@@ -115,6 +115,14 @@ ssh -o StrictHostKeyChecking=no \
 
 Use `scp` or `rsync` only after this direct SSH check succeeds.
 
+## Cost Controls
+
+- Do not make model download or SGLang startup part of the Vast boot path.
+- Enforce the 120-second direct SSH gate before syncing files or installing packages.
+- On SGLang images, use `vast_bootstrap.py --profile t4-sglang`; do not run a broad `pip install -r` that can reinstall CUDA/Torch.
+- Record `vastai show user` before launch and after teardown.
+- Keep dependency bootstraps and long eval commands in logs under `runs/mednla/<run_id>/logs/`.
+
 ## Standard Flow
 
 1. Search and create an instance with [vast_cli_reference.md](vast_cli_reference.md).
@@ -134,7 +142,7 @@ python scripts/mednla/run_eval_pipeline.py \
   --config configs/mednla/pilot_qwen7b_medqa.yaml \
   --model qwen7b \
   --run-dir runs/mednla/pilot_qwen7b_medqa \
-  --stages check_sglang,decode,score_heuristic,analysis,validate \
+  --stages preflight,check_sglang,decode,score_heuristic,analysis,validate \
   --sglang-url http://127.0.0.1:18000 \
   --no-critic \
   --quick-analysis \
